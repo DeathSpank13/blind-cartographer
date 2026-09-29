@@ -2,6 +2,10 @@
 
 A browser game about maps and orientation, made as a solo project for the seminar Maps and the City (Summer 2026) by Jaber Rashki Ghaleh No.
 
+Play it online: [deathspank13.github.io/blind-cartographer](https://deathspank13.github.io/blind-cartographer/)
+
+Post mortem report: [read it here](https://deathspank13.github.io/blind-cartographer/report/Post-Mortem_Blind-Cartographer.html)
+
 You play a courier who has to deliver the five letters of a dead mapmaker in a city you have never seen, and you have to do it without a map. You find your way by the tall landmarks that show above the fog (the lighthouse, cathedral, clock tower and windmill), by edges like the waterfront and the river, and by the character of each district. After the fifth letter the game shows the real map of the city next to your own sketch.
 
 ## Files
