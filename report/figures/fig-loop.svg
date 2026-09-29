@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive">
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M1,1 L9,5 L1,9" fill="none" stroke="#2b3a55" stroke-width="1.6" stroke-linecap="round"/>
+    </marker>
+  </defs>
+  <rect width="900" height="400" fill="#f4ecd8"/>
+  <rect x="10" y="10" width="880" height="380" fill="none" stroke="#c9b894" stroke-width="1.5"/>
+
+  <text x="450" y="46" text-anchor="middle" font-size="22" fill="#2b3a55">The loop: how orientation grows without a map</text>
+
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive">
+    <!-- 1 read the letter -->
+    <path d="M75,120 L200,114 L204,196 L79,202 Z" stroke="#8a6f4d" stroke-width="2.4"/>
+    <path d="M75,120 L140,158 L204,114" stroke="#8a6f4d" stroke-width="1.8"/>
+    <text x="140" y="235" text-anchor="middle" font-size="16" fill="#33302a">1. read the letter</text>
+    <text x="140" y="257" text-anchor="middle" font-size="13" fill="#8a6f4d">"…past the clock tower,</text>
+    <text x="140" y="275" text-anchor="middle" font-size="13" fill="#8a6f4d">left along the canal…"</text>
+
+    <!-- arrow -->
+    <path d="M225,158 C255,150 275,150 305,156" stroke="#2b3a55" stroke-width="2" marker-end="url(#arr2)"/>
+
+    <!-- 2 walk & watch the skyline -->
+    <circle cx="372" cy="150" r="12" stroke="#7a3b2e" stroke-width="2.4"/>
+    <path d="M372,162 L372,190 M372,170 L356,182 M372,170 L388,182 M372,190 L358,212 M372,190 L386,212" stroke="#7a3b2e" stroke-width="2.4"/>
+    <path d="M420,100 l12,0 l-1,-38 l-10,0 Z" stroke="#2b3a55" stroke-width="2"/>
+    <circle cx="426" cy="72" r="5" stroke="#2b3a55" stroke-width="1.6"/>
+    <path d="M402,110 C410,104 418,101 420,100" stroke="#9aa4b2" stroke-width="1.6" stroke-dasharray="2 6"/>
+    <text x="392" y="235" text-anchor="middle" font-size="16" fill="#33302a">2. walk; steer by the skyline</text>
+    <text x="392" y="257" text-anchor="middle" font-size="13" fill="#8a6f4d">landmarks pierce the fog;</text>
+    <text x="392" y="275" text-anchor="middle" font-size="13" fill="#8a6f4d">edges + districts confirm the way</text>
+
+    <!-- arrow -->
+    <path d="M470,158 C500,150 520,150 550,156" stroke="#2b3a55" stroke-width="2" marker-end="url(#arr2)"/>
+
+    <!-- 3 sketch what you learned -->
+    <path d="M575,112 L700,108 L703,200 L578,204 Z" stroke="#8a6f4d" stroke-width="2.4"/>
+    <path d="M590,180 C600,150 615,165 625,135" stroke="#2b3a55" stroke-width="2"/>
+    <path d="M640,125 l28,0 M646,140 l18,0 M638,155 l0,32" stroke="#2b3a55" stroke-width="2"/>
+    <path d="M672,168 l14,14 M686,168 l-14,14" stroke="#a03a2e" stroke-width="2"/>
+    <path d="M700,110 l14,-16 l6,5 l-14,16 Z" stroke="#7a3b2e" stroke-width="1.8"/>
+    <text x="640" y="235" text-anchor="middle" font-size="16" fill="#33302a">3. sketch it (optional)</text>
+    <text x="640" y="257" text-anchor="middle" font-size="13" fill="#8a6f4d">the cognitive map, externalised</text>
+
+    <!-- arrow -->
+    <path d="M722,158 C752,150 772,150 800,156" stroke="#2b3a55" stroke-width="2" marker-end="url(#arr2)"/>
+
+    <!-- 4 deliver -->
+    <path d="M820,120 l40,0 l0,60 l-40,0 Z" stroke="#3e7d4f" stroke-width="2.4"/>
+    <path d="M828,132 l24,0 l0,48 l-24,0 Z" stroke="#3e7d4f" stroke-width="2"/>
+    <circle cx="847" cy="158" r="2" fill="#3e7d4f" stroke="none"/>
+    <text x="840" y="235" text-anchor="middle" font-size="16" fill="#33302a">4. deliver</text>
+    <text x="840" y="257" text-anchor="middle" font-size="13" fill="#8a6f4d">×5 letters</text>
+
+    <!-- loop back -->
+    <path d="M838,270 C800,330 240,335 148,272" stroke="#2b3a55" stroke-width="2" stroke-dasharray="8 7" marker-end="url(#arr2)"/>
+    <text x="493" y="322" text-anchor="middle" font-size="14" fill="#2b3a55">each delivery starts farther from what you already know</text>
+
+    <!-- finale note -->
+    <text x="450" y="372" text-anchor="middle" font-size="15" fill="#7a3b2e">finale: the game shows its map for the first time — beside yours. The comparison, not a score, is the reward.</text>
+  </g>
+</svg>

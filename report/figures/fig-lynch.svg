@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540" font-family="'Segoe Print','Bradley Hand','Comic Sans MS',cursive">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1,1 L9,5 L1,9" fill="none" stroke="#7a3b2e" stroke-width="1.6" stroke-linecap="round"/>
+    </marker>
+  </defs>
+  <!-- paper -->
+  <rect width="900" height="540" fill="#f4ecd8"/>
+  <rect x="10" y="10" width="880" height="520" fill="none" stroke="#c9b894" stroke-width="1.5"/>
+
+  <text x="450" y="44" text-anchor="middle" font-size="24" fill="#2b3a55">Vellhaven, planned with Kevin Lynch's five elements</text>
+
+  <!-- ==== the sketch-map (center-left) ==== -->
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- EDGE: harbour coastline -->
+    <path d="M195,90 C188,140 200,180 192,235 C186,285 199,340 190,395 C186,430 195,455 191,485"
+          stroke="#2b3a55" stroke-width="3"/>
+    <path d="M170,95 C165,150 178,210 168,270 C162,330 175,400 168,480" stroke="#7da7bd" stroke-width="2" stroke-dasharray="1 7"/>
+    <path d="M148,110 C144,170 155,240 147,310 C143,370 152,430 147,475" stroke="#7da7bd" stroke-width="2" stroke-dasharray="1 7"/>
+
+    <!-- EDGE: the river (from top, bends west into the harbour) -->
+    <path d="M478,80 C482,120 474,160 480,200 C484,240 470,268 430,275 C360,287 280,282 196,283"
+          stroke="#2b3a55" stroke-width="3"/>
+    <path d="M497,82 C500,125 492,168 497,205 C500,242 486,286 436,293 C365,304 280,300 197,301"
+          stroke="#2b3a55" stroke-width="3"/>
+    <!-- bridges -->
+    <path d="M470,150 L505,150 M470,152 L505,152" stroke="#7a3b2e" stroke-width="2.4"/>
+    <path d="M300,278 L300,306 M303,278 L303,306" stroke="#7a3b2e" stroke-width="2.4"/>
+
+    <!-- DISTRICT: Old Town (winding paths) -->
+    <path d="M225,120 C260,116 300,124 340,118 C380,113 420,122 455,117" stroke="#8a6f4d" stroke-width="2.2"/>
+    <path d="M230,180 C270,188 320,176 365,184 C405,190 435,181 458,186" stroke="#8a6f4d" stroke-width="2.2"/>
+    <path d="M290,120 C287,150 293,190 288,240" stroke="#8a6f4d" stroke-width="2.2"/>
+    <path d="M390,118 C394,160 386,210 392,255" stroke="#8a6f4d" stroke-width="2.2"/>
+
+    <!-- NODE: the plaza + fountain -->
+    <path d="M290,360 L360,354 L366,415 L295,421 Z" stroke="#2b3a55" stroke-width="2.6"/>
+    <circle cx="328" cy="388" r="9" stroke="#3f7fa8" stroke-width="2.4"/>
+    <circle cx="328" cy="388" r="2.5" fill="#3f7fa8" stroke="none"/>
+
+    <!-- DISTRICT: the New Quarter (ruled grid) -->
+    <path d="M520,340 L800,336 M520,395 L800,391 M520,450 L800,446" stroke="#5c6b85" stroke-width="2"/>
+    <path d="M565,325 L568,465 M645,322 L648,462 M725,320 L728,460" stroke="#5c6b85" stroke-width="2"/>
+
+    <!-- DISTRICT: Millfields (hill + grass ticks) -->
+    <path d="M560,205 C610,165 700,160 760,195" stroke="#5f7a4a" stroke-width="2.2"/>
+    <path d="M585,225 l6,-9 M615,215 l6,-9 M650,210 l6,-9 M690,212 l6,-9 M725,220 l6,-9" stroke="#5f7a4a" stroke-width="1.8"/>
+
+    <!-- LANDMARKS -->
+    <!-- lighthouse -->
+    <path d="M205,120 l10,0 l-2,-34 l-6,0 Z" stroke="#7a3b2e" stroke-width="2.2"/>
+    <path d="M203,96 l14,0 M203,106 l14,0" stroke="#7a3b2e" stroke-width="2"/>
+    <path d="M202,80 l16,0" stroke="#2b3a55" stroke-width="2"/>
+    <path d="M197,74 l-8,-6 M223,74 l8,-6" stroke="#e0a12f" stroke-width="2"/>
+    <!-- cathedral -->
+    <path d="M258,86 l22,0 l0,22 l-22,0 Z M269,86 L269,64 M263,72 l12,0" stroke="#2b3a55" stroke-width="2.2"/>
+    <!-- clock tower -->
+    <path d="M430,100 l14,0 l-1,-44 l-12,0 Z" stroke="#2b3a55" stroke-width="2.2"/>
+    <circle cx="437" cy="68" r="6" stroke="#2b3a55" stroke-width="1.8"/>
+    <path d="M437,68 l0,-4 M437,68 l3,2" stroke="#2b3a55" stroke-width="1.4"/>
+    <!-- windmill -->
+    <path d="M655,175 l16,0 l-4,-26 l-8,0 Z" stroke="#7a3b2e" stroke-width="2.2"/>
+    <path d="M663,149 l14,-14 M663,149 l14,14 M663,149 l-14,14 M663,149 l-14,-14" stroke="#7a3b2e" stroke-width="2"/>
+  </g>
+
+  <!-- ==== annotations ==== -->
+  <g font-size="16" fill="#7a3b2e">
+    <text x="60" y="250" transform="rotate(-90 60 250)" text-anchor="middle">EDGE — the harbourfront</text>
+    <path d="M78,220 C95,222 115,230 140,240" stroke="#7a3b2e" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+    <text x="560" y="118">EDGE — the river</text>
+    <path d="M556,113 C530,108 515,105 502,108" stroke="#7a3b2e" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+    <text x="236" y="222" fill="#8a6f4d">PATHS — winding in the Old Town…</text>
+    <text x="530" y="487" fill="#5c6b85">…ruled straight in the New Quarter</text>
+    <text x="530" y="508" fill="#5c6b85" font-size="13">(every DISTRICT keeps its own character)</text>
+
+    <text x="230" y="465" fill="#2b3a55">NODE — the plaza, where paths gather</text>
+    <path d="M310,448 C318,437 322,428 325,412" stroke="#2b3a55" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+    <text x="590" y="70">LANDMARKS — pierce the fog</text>
+    <path d="M600,78 C560,88 510,76 452,68" stroke="#7a3b2e" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <path d="M700,80 C690,110 680,130 670,145" stroke="#7a3b2e" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+    <text x="600" y="248" fill="#5f7a4a">Millfields — the green district</text>
+  </g>
+
+  <text x="450" y="522" text-anchor="middle" font-size="14" fill="#8a6f4d">design scribble: every navigational aid in the game is a piece of the city, not a piece of UI</text>
+</svg>

@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Blind Cartographer — a game about maps and orientation</title>
+<style>
+  :root{
+    --paper:#f4ecd8; --ink:#2b3a55; --dim:#0b0e12;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:#11151c; color:#e8e4da;
+    font-family:Georgia,'Times New Roman',serif;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  #stage{position:relative; width:960px; height:624px;}
+  canvas#game{display:block; width:960px; height:624px; background:#11151c; image-rendering:pixelated;}
+
+  /* ---------- HUD ---------- */
+  #hud{
+    position:absolute; top:10px; left:10px; right:10px;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    pointer-events:none; font-size:14px;
+  }
+  .hudcard{
+    background:rgba(14,17,24,.82); border:1px solid rgba(232,228,218,.25);
+    border-radius:6px; padding:8px 12px; max-width:520px;
+    box-shadow:0 2px 10px rgba(0,0,0,.5);
+  }
+  .hudcard b{color:#e9c46a;}
+  .hudcard .keys{color:#9aa4b2; font-size:12px; margin-top:3px;}
+  #toast{
+    position:absolute; top:64px; left:50%; transform:translateX(-50%);
+    background:rgba(14,17,24,.85); border:1px solid rgba(233,196,106,.5);
+    color:#e9c46a; padding:8px 22px; border-radius:20px; font-size:17px;
+    font-style:italic; opacity:0; transition:opacity .5s; pointer-events:none;
+    letter-spacing:.5px;
+  }
+  #prompt{
+    position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
+    background:rgba(233,196,106,.95); color:#2b2416; font-weight:bold;
+    padding:7px 18px; border-radius:6px; font-size:15px; display:none;
+    box-shadow:0 2px 8px rgba(0,0,0,.6); pointer-events:none;
+  }
+
+  /* ---------- overlays ---------- */
+  .overlay{
+    position:absolute; inset:0; background:rgba(8,10,14,.78);
+    display:none; align-items:center; justify-content:center; z-index:10;
+  }
+  .overlay.show{display:flex;}
+  .paper{
+    background:var(--paper); color:#33302a; max-width:560px; width:88%;
+    padding:34px 42px; border-radius:2px; position:relative;
+    box-shadow:0 12px 40px rgba(0,0,0,.7), inset 0 0 60px rgba(160,130,80,.18);
+  }
+  .paper::before{
+    content:""; position:absolute; inset:8px; pointer-events:none;
+    border:1px solid rgba(90,70,40,.25);
+  }
+  .paper h1{font-size:30px; letter-spacing:1px; margin-bottom:6px; color:#241f18;}
+  .paper h2{font-size:20px; margin-bottom:12px; color:#241f18;}
+  .paper h3{font-size:15px; text-transform:uppercase; letter-spacing:2px; color:#8a6f4d; margin-bottom:10px;}
+  .paper p{font-size:15px; line-height:1.55; margin-bottom:11px;}
+  .paper .sig{text-align:right; font-style:italic;}
+  .paper .go{
+    margin-top:16px; text-align:center; font-size:13px; letter-spacing:1px;
+    color:#8a6f4d; text-transform:uppercase;
+  }
+  .paper .controls{font-size:14px; line-height:1.8; color:#4a4136;}
+  kbd{
+    background:#e6dcc2; border:1px solid #c4b494; border-bottom-width:3px;
+    border-radius:4px; padding:1px 7px; font-family:inherit; font-size:13px; color:#3a3225;
+  }
+
+  /* ---------- sketchbook ---------- */
+  #sketchWrap{z-index:20;}
+  #sketchPanel{
+    background:#e9dfc8; padding:14px; border-radius:4px;
+    box-shadow:0 12px 40px rgba(0,0,0,.7);
+  }
+  #sketchBar{display:flex; gap:8px; align-items:center; margin-bottom:10px; font-size:13px; color:#5a4f3d;}
+  #sketchBar button{
+    font-family:inherit; font-size:13px; padding:4px 12px; cursor:pointer;
+    background:#f4ecd8; color:#33302a; border:1px solid #b3a281; border-radius:4px;
+  }
+  #sketchBar button.active{background:#2b3a55; color:#f4ecd8; border-color:#2b3a55;}
+  #sketchBar .spacer{flex:1;}
+  canvas#sketch{background:var(--paper); cursor:crosshair; display:block;
+    box-shadow:inset 0 0 40px rgba(160,130,80,.25); border:1px solid #b3a281;}
+
+  /* ---------- ending ---------- */
+  #endPanel{max-width:920px; width:96%;}
+  #endMaps{display:flex; gap:18px; justify-content:center; margin:14px 0;}
+  .endMap{text-align:center;}
+  .endMap canvas{border:1px solid #b3a281; background:var(--paper); display:block;}
+  .endMap .cap{font-size:13px; font-style:italic; color:#6a5c44; margin-top:6px;}
+  #stats{font-size:14px; text-align:center; color:#4a4136; margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" width="960" height="624"></canvas>
+
+  <div id="hud" style="display:none">
+    <div class="hudcard" id="objective"></div>
+    <div class="hudcard" style="text-align:right">
+      <div id="counter"></div>
+      <div class="keys">T letter · M sketchbook · H help</div>
+    </div>
+  </div>
+  <div id="toast"></div>
+  <div id="prompt">Press E to deliver the letter</div>
+
+  <!-- title -->
+  <div class="overlay show" id="titleOverlay">
+    <div class="paper">
+      <h3>A game about maps &amp; orientation</h3>
+      <h1>Blind Cartographer</h1>
+      <p><em>Vellhaven.</em> The old mapmaker Odell Marrow is dead. He leaves five letters — and one
+      condition in his will: they must be carried by someone who has <em>never seen a map of his city</em>.</p>
+      <p>That someone is you. You step off the ferry with his satchel. No map. No markers.
+      Only the city itself: its water, its streets, its towers. Learn it the way he did —
+      and if you like, draw what you learn in your sketchbook. At journey's end, we will compare.</p>
+      <p class="controls">
+        <kbd>W A S D</kbd> / arrows — walk &nbsp;·&nbsp; <kbd>E</kbd> — deliver / continue<br>
+        <kbd>M</kbd> — your sketchbook &nbsp;·&nbsp; <kbd>T</kbd> — re-read the letter &nbsp;·&nbsp; <kbd>H</kbd> — help
+      </p>
+      <p class="go">— press Enter to step ashore —</p>
+    </div>
+  </div>
+
+  <!-- letter to deliver -->
+  <div class="overlay" id="letterOverlay">
+    <div class="paper">
+      <h3 id="letterKicker"></h3>
+      <h2 id="letterTitle"></h2>
+      <p id="letterBody"></p>
+      <p class="go">— press E to tuck the letter away —</p>
+    </div>
+  </div>
+
+  <!-- delivered vignette -->
+  <div class="overlay" id="vignetteOverlay">
+    <div class="paper">
+      <h3>the letter reads…</h3>
+      <p id="vignetteBody" style="font-style:italic"></p>
+      <p class="sig">— Odell Marrow</p>
+      <p class="go" id="vignetteGo">— press E to continue —</p>
+    </div>
+  </div>
+
+  <!-- help -->
+  <div class="overlay" id="helpOverlay">
+    <div class="paper">
+      <h2>How to find your way</h2>
+      <p class="controls">
+        <kbd>W A S D</kbd> / arrows — walk<br>
+        <kbd>E</kbd> — deliver a letter at its door / continue<br>
+        <kbd>M</kbd> — open or close your sketchbook<br>
+        <kbd>T</kbd> — re-read the current letter<br>
+        <kbd>H</kbd> — this help
+      </p>
+      <p>There is no map and no compass. Watch for <b>tall landmarks</b> above the rooftops,
+      keep track of <b>edges</b> — the river, the waterfront — and learn the character of each
+      <b>district</b>. The letters describe every address by such things.</p>
+      <p class="go">— press H or E to close —</p>
+    </div>
+  </div>
+
+  <!-- sketchbook -->
+  <div class="overlay" id="sketchWrap">
+    <div id="sketchPanel">
+      <div id="sketchBar">
+        <span>Your sketchbook — the only map is the one you make.</span>
+        <span class="spacer"></span>
+        <button data-tool="ink" class="active">Ink</button>
+        <button data-tool="red">Red</button>
+        <button data-tool="erase">Eraser</button>
+        <button data-size="thin" class="active" id="thinBtn">Fine</button>
+        <button data-size="thick" id="thickBtn">Broad</button>
+        <button id="clearSketch">Clear</button>
+        <button id="closeSketch">Close (M)</button>
+      </div>
+      <canvas id="sketch" width="760" height="520"></canvas>
+    </div>
+  </div>
+
+  <!-- ending -->
+  <div class="overlay" id="endOverlay">
+    <div class="paper" id="endPanel">
+      <h3>the satchel is empty</h3>
+      <h2>The Last Map</h2>
+      <p>From the mill hill, Vellhaven lies below you: the harbour, the river, the tower, the plaza.
+      You reach for the next letter and find none — and realise you no longer need to search for anything.
+      Odell was right about the shoes. He was wrong about one thing: every walker draws a map, whether on paper or not.</p>
+      <div id="stats"></div>
+      <div id="endMaps">
+        <div class="endMap">
+          <canvas id="endSketch" width="440" height="301"></canvas>
+          <div class="cap">the city as you learned it (your sketchbook)</div>
+        </div>
+        <div class="endMap">
+          <canvas id="endTrue" width="440" height="330"></canvas>
+          <div class="cap">the city as the surveyors draw it</div>
+        </div>
+      </div>
+      <p class="go">— press R to walk the city again —</p>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   BLIND CARTOGRAPHER — a prototype about orientation without a map.
+   Seminar "Maps and the City". Single file, no dependencies.
+   Design notes: the city is legible through Kevin Lynch's five elements
+   (paths, edges, districts, nodes, landmarks); the game never shows a
+   map, but tall landmarks are visible above the fog from afar, and the
+   player may draw their own map (M).
+   Hidden test hooks: open with  #pose=1..4  to jump to screenshot poses;
+   with a pose or #debug active, N force-delivers the current letter.
+   ===================================================================== */
+
+/* ---------------- map ----------------
+   ~ water   d dock   . street   p plaza   g grass   t tree   # building
+   = bridge  L lighthouse  K cathedral  C clock tower  W windmill  F fountain
+   1-5 the five doors */
+const MAP_ROWS = [
+"~~~~~d.####################~~ttggttggggttggttggt",
+"~~~~~d.####################~~gggtggggggtttggggtg",
+"~~~~~d.....................~~ggttggggggggggttggg",
+"~~Lddd.###.ppp#.####.###.##~~gttggggggggggggtggg",
+"~~~~~d.1##.pKp#.####.###.##~~ggggggggggtggggggtg",
+"~~~~~d.###.ppp#.####.###.##~~ggggggggg..W5gggggg",
+"~~~~~d.....................~~ggggggggg.gggtggggt",
+"~~~~~d.###.####.####.###...==..........gtgggtggg",
+"~~~~~d.###.####.####.###.#.~~ggtggggggggggtggggg",
+"~~~~~d.###.####.####.###.#.~~gggggttgggggggggttg",
+"~~~~~d.....................~~ggggggttggggggggggg",
+"~~~~~d.###.#########.3C###.~~gggggggggggggggtggg",
+"~~~~~d.###.#########.#####.~~ttggggggggggggggggt",
+"~~~~~d.###.#########.#####.~~tggggggggggggggggtt",
+"~~~~~d.....................~~ggggggggggggggggggg",
+"~~~~~~=~~~~~=~~~~~~~~~=~~~~~~ggggggggggggggggggg",
+"~~~~~~=~~~~~=~~~~~~~~~=~~~~~~gggtggggggggggtgggg",
+"~~~~~d.#####.#########.###.gg###gg###gg###gggggg",
+"~~~~~d.........................................#",
+"~~~~~d.###.#.#############.####.####.####.####.#",
+"~~~~~d.###.#.#############.####.####.####.####.#",
+"~~~~~d.###.#ppppppp#######.####.####.####.####.#",
+"~~~~~d.###.#ppppppp#######.####.####.####.####.#",
+"~~~~~d......ppppppp............................#",
+"~~~~~d.###.2pppFppp#######.####.####.####.####.#",
+"~~~~~d.###.#ppppppp#######.####.####.####.####.#",
+"~~~~~d.###.#ppppppp#######.####.####.####.####.#",
+"~~~~~d.###.#ppppppp#######.####.####.4###.####.#",
+"~~~~~d.........................................#",
+"~~~~~d.###.####.##########.####.####.####.####.#",
+"~~~~~d.###.####.##########.####.####.####.####.#",
+"~~~~~d.###.####.##########.####.####.####.####.#",
+"~~~~~d.###.####.##########.####.####.####.####.#",
+"~~~~~d.........................................#",
+"~~~~~d.###################.##ggg####gg####ggg###",
+"~~~~~d.####ttt########tt#########ttt####tt######",
+];
+const MAPW = 48, MAPH = 36;
+MAP_ROWS.forEach((r,i)=>{ if(r.length!==MAPW) console.error("map row "+i+" has length "+r.length); });
+const at = (x,y) => (x<0||y<0||x>=MAPW||y>=MAPH) ? '~' : MAP_ROWS[y][x];
+const WALKABLE = new Set(['.','p','g','d','=']);
+const walkable = (x,y) => WALKABLE.has(at(x,y));
+
+/* districts: Lynch's districts, each with its own tint & name toast */
+const DISTRICTS = [
+  {name:"the Harbourfront",   x0:0,  y0:0,  x1:6,  y1:35, tint:"rgba(80,130,160,0.10)", roof:["#6b5a44","#75624a","#5f5140"]},
+  {name:"Old Vellhaven",      x0:7,  y0:0,  x1:26, y1:14, tint:"rgba(205,150,80,0.12)", roof:["#9a5a3c","#8f5340","#a4643f"]},
+  {name:"the Millfields",     x0:29, y0:0,  x1:47, y1:16, tint:"rgba(110,180,90,0.08)", roof:["#7a6a4d","#7a6a4d","#7a6a4d"]},
+  {name:"the Market Ward",    x0:7,  y0:17, x1:24, y1:35, tint:"rgba(225,185,95,0.10)", roof:["#b08948","#a37c42","#96703d"]},
+  {name:"the New Quarter",    x0:25, y0:17, x1:47, y1:35, tint:"rgba(120,140,190,0.12)", roof:["#5c6b85","#66748e","#525f78"]},
+];
+const districtAt = (x,y) => DISTRICTS.find(d=>x>=d.x0&&x<=d.x1&&y>=d.y0&&y<=d.y1) || null;
+
+/* landmarks (Lynch), found on the map; 'reveal' = distance at which the
+   silhouette shows above the fog — the game's main long-range orientation aid */
+const LANDMARK_DEFS = {
+  L:{name:"the Lighthouse",  reveal:17},
+  K:{name:"the Cathedral",   reveal:16},
+  C:{name:"the Clock Tower", reveal:16},
+  W:{name:"the Windmill",    reveal:17},
+  F:{name:"the Fountain",    reveal:9},
+};
+const landmarks = [];
+const doors = {};   // '1'..'5' -> {x,y}
+for(let y=0;y<MAPH;y++)for(let x=0;x<MAPW;x++){
+  const c = at(x,y);
+  if(LANDMARK_DEFS[c]) landmarks.push({c, x, y, ...LANDMARK_DEFS[c]});
+  if(c>='1'&&c<='5') doors[c] = {x,y};
+}
+
+/* ---------------- the five letters ---------------- */
+const LETTERS = [
+  { door:'1', to:"Brann, the harbourmaster", houseName:"The Harbourmaster's House", doorColor:"#3e7d4f",
+    directions:"Walk north along the waterfront and cross the little footbridge where the river spills into the harbour. Keep the water at your left hand until the lighthouse rises over the piers. Brann keeps the last house before the pier — the one with the green door.",
+    vignette:"Brann — you once told me a harbour is a city's front door, and so I drew your piers at the edge of every map I ever made. What I never told you: on my first morning in Vellhaven, forty years ago, it was your lighthouse that told me where I was. Everything I measured, I measured from its light." },
+  { door:'2', to:"Odile, the baker", houseName:"Odile's Bakery", doorColor:"#3b5f9e",
+    directions:"Go back south over the footbridge, then follow the waterfront until a market street turns inland. It runs straight to the plaza — you will hear the fountain before you see it. Odile bakes at the western edge of the square, her blue door facing the water-jets.",
+    vignette:"Odile — strangers believe a city's centre is printed on its maps. You and I know better: the centre is wherever the bread is still warm. Your plaza was never a square of flagstones to me. It was the smell of your ovens — and that, no map of mine could hold." },
+  { door:'3', to:"Fenn, the clockmaker", houseName:"Fenn, Clockmaker", doorColor:"#a03a2e",
+    directions:"Cross the river into the Old Town by one of the bridges north of the plaza. Wander until you find the clock tower standing above the roofs — you cannot miss it; that is the point of it. Fenn lives in the tower's shadow, behind the red door beside it.",
+    vignette:"Fenn — your tower was the one thing in the Old Town I never had to search for. Landmark, my books call it. Mercy for lost men, I call it. Keep the clock wound: streets bend and houses change their faces, but the hour hand has never once led me astray." },
+  { door:'4', to:"the widow Alvey", houseName:"The Widow Alvey", doorColor:"#c9a227",
+    directions:"East of the plaza lies the New Quarter, where the streets run straight as ruled lines and every corner repeats. Take the market street east from the square, pass two crossings, and at the third turn south. Where it meets the next straight street, hers is the first yellow door on your left, just past the corner.",
+    vignette:"Alvey — forgive the Quarter its sameness. I drew those ruled streets myself when they drained the east marsh, and I believed order would help people find one another. Instead it taught them to count corners. Tell your neighbours the old mapmaker knew, and was sorry." },
+  { door:'5', to:"Josa, the miller", houseName:"Josa's Mill House", doorColor:"#e8e4da",
+    directions:"Last of all: cross back over the river where it runs narrow in the north — the old stone bridge east of the clock tower — and climb through the Millfields until you see the sails turning against the sky. Josa's pale door stands beside the windmill.",
+    vignette:"Josa — by the time this reaches your hill, the courier carrying it will have crossed every ward of Vellhaven without a single map, just as I did the year I arrived. Burn the charts in my study; they were only souvenirs. The truest map of a city is worn into the soles of one's shoes. There is one more copy in the world now." },
+];
+
+/* ---------------- state ---------------- */
+const TILE = 24, VIEWW = 960, VIEWH = 624;
+const state = {
+  mode:"title",            // title | play | end
+  px:5, py:24,             // player tile
+  drawX:5*TILE, drawY:24*TILE, // eased pixel pos
+  facing:1,                // 1 right, -1 left
+  letter:0, delivered:0,
+  steps:0, t0:0, tEnd:0,
+  explored: Array.from({length:MAPH},()=>new Array(MAPW).fill(false)),
+  seen: new Set(),         // discovered districts
+  overlay:null,            // letter | vignette | help | sketch | end
+  moveCooldown:0,
+};
+const VIS = 6.2;           // fog radius
+
+function explore(cx,cy,r=VIS){
+  const R=Math.ceil(r);
+  for(let y=cy-R;y<=cy+R;y++)for(let x=cx-R;x<=cx+R;x++){
+    if(x<0||y<0||x>=MAPW||y>=MAPH) continue;
+    if((x-cx)*(x-cx)+(y-cy)*(y-cy) <= r*r) state.explored[y][x]=true;
+  }
+}
+const dist = (x1,y1,x2,y2)=>Math.hypot(x1-x2,y1-y2);
+
+/* ---------------- DOM ---------------- */
+const $ = id=>document.getElementById(id);
+const cv = $("game"), ctx = cv.getContext("2d");
+const overlays = {title:$("titleOverlay"), letter:$("letterOverlay"), vignette:$("vignetteOverlay"),
+                  help:$("helpOverlay"), sketch:$("sketchWrap"), end:$("endOverlay")};
+function showOverlay(name){
+  Object.values(overlays).forEach(o=>o.classList.remove("show"));
+  state.overlay = name;
+  if(name) overlays[name].classList.add("show");
+}
+function toast(msg){
+  const t=$("toast"); t.textContent=msg; t.style.opacity=1;
+  clearTimeout(t._h); t._h=setTimeout(()=>t.style.opacity=0, 2600);
+}
+const ROMAN=["I","II","III","IV","V"];
+function updateHud(){
+  $("hud").style.display = state.mode==="play" ? "flex" : "none";
+  if(state.letter < LETTERS.length){
+    const L=LETTERS[state.letter];
+    $("objective").innerHTML = "Letter <b>"+ROMAN[state.letter]+"</b> — for <b>"+L.to+"</b><div class='keys'>press T to read the directions again</div>";
+  } else {
+    $("objective").innerHTML = "<b>All letters delivered.</b>";
+  }
+  $("counter").innerHTML = "✉ "+state.delivered+" / "+LETTERS.length;
+}
+function openLetter(){
+  const L=LETTERS[state.letter];
+  $("letterKicker").textContent = "letter "+ROMAN[state.letter]+" of V";
+  $("letterTitle").textContent = "For "+L.to;
+  $("letterBody").textContent = "The envelope, in Odell's hand: “"+L.directions+"”";
+  showOverlay("letter");
+}
+function deliverCurrent(){
+  const L=LETTERS[state.letter];
+  state.delivered++;
+  $("vignetteBody").textContent = "“"+L.vignette+"”";
+  $("vignetteGo").textContent = state.letter===LETTERS.length-1 ?
+      "— press E —" : "— press E for the next letter —";
+  showOverlay("vignette");
+  updateHud();
+}
+function afterVignette(){
+  if(state.letter < LETTERS.length-1){
+    state.letter++; updateHud(); openLetter();
+  } else {
+    state.letter++; finishGame();
+  }
+}
+function startGame(){
+  state.mode="play"; state.t0=performance.now();
+  explore(state.px,state.py);
+  const d=districtAt(state.px,state.py);
+  if(d){state.seen.add(d.name); toast("You come ashore at "+d.name);}
+  updateHud(); openLetter();
+}
+
+/* ---------------- ending ---------------- */
+function exploredPercent(){
+  let n=0,tot=0;
+  for(let y=0;y<MAPH;y++)for(let x=0;x<MAPW;x++)
+    if(walkable(x,y)){tot++; if(state.explored[y][x])n++;}
+  return Math.round(100*n/tot);
+}
+function fmtTime(ms){
+  const s=Math.floor(ms/1000);
+  return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+}
+function finishGame(){
+  state.mode="end"; state.tEnd=performance.now();
+  $("stats").textContent = "Steps taken: "+state.steps+
+    "   ·   Time in the city: "+fmtTime(state.tEnd-state.t0)+
+    "   ·   Streets learned: "+exploredPercent()+"%";
+  // your sketch, scaled
+  const es=$("endSketch"), esc=es.getContext("2d");
+  esc.fillStyle="#f4ecd8"; esc.fillRect(0,0,es.width,es.height);
+  esc.drawImage(sketchCv, 0,0,sketchCv.width,sketchCv.height, 0,0,es.width,es.height);
+  // the "true" map
+  drawTrueMap($("endTrue"));
+  showOverlay("end");
+  updateHud();
+}
+
+/* =====================================================================
+   RENDERING
+   ===================================================================== */
+const rnd = (x,y,s=0)=>{ // deterministic per-tile pseudo-random
+  let h = (x*374761393 + y*668265263 + s*974634) & 0x7fffffff;
+  h = (h ^ (h>>13)) * 1274126177 & 0x7fffffff;
+  return (h & 0xffff)/0xffff;
+};
+
+function groundColor(x,y){
+  const c=at(x,y);
+  switch(c){
+    case '~': return "#2e5d7c";
+    case 'd': return "#8a6f4d";
+    case '=': return "#7a5c3d";
+    case '.': return (districtAt(x,y)&&districtAt(x,y).name==="Old Vellhaven")?"#b5a184":"#aca394";
+    case 'p': return ((x+y)%2===0)?"#cfc3a8":"#c7bb9f";
+    case 'g': case 't': return (rnd(x,y)<.5)?"#6a8f5a":"#648a55";
+    default:  return "#9c9484"; // under buildings
+  }
+}
+
+function drawTile(g,x,y,px,py,time){
+  const c=at(x,y);
+  g.fillStyle = groundColor(x,y);
+  g.fillRect(px,py,TILE,TILE);
+  const d=districtAt(x,y);
+  if(d && c!=='~'){ g.fillStyle=d.tint; g.fillRect(px,py,TILE,TILE); }
+
+  if(c==='~'){ // water shimmer
+    const s = Math.sin(time/900 + x*1.7 + y*2.3);
+    if(s>0.55){ g.fillStyle="rgba(255,255,255,0.10)"; g.fillRect(px+4,py+TILE/2-1,TILE-8,2); }
+    else if(s<-0.75){ g.fillStyle="rgba(10,30,50,0.20)"; g.fillRect(px+3,py+TILE/2+4,TILE-6,2); }
+  }
+  if(c==='d'||c==='='){ // planks
+    g.strokeStyle="rgba(60,42,25,0.55)"; g.lineWidth=1; g.beginPath();
+    for(let i=1;i<4;i++){ g.moveTo(px, py+i*TILE/4+.5); g.lineTo(px+TILE, py+i*TILE/4+.5); }
+    g.stroke();
+    if(c==='='){ g.strokeStyle="#4a3722"; g.strokeRect(px+1.5,py+1.5,TILE-3,TILE-3); }
+  }
+  if(c==='.'){ // faint cobble dots
+    if(rnd(x,y,3)<.3){ g.fillStyle="rgba(70,64,55,0.18)"; g.fillRect(px+6+8*rnd(x,y,4), py+6+8*rnd(x,y,5), 3,3); }
+  }
+  if(c==='p'){ g.strokeStyle="rgba(120,105,75,0.35)"; g.strokeRect(px+.5,py+.5,TILE-1,TILE-1); }
+  if(c==='t'){ // tree
+    g.fillStyle="#3f5c33";
+    g.beginPath(); g.arc(px+TILE/2, py+TILE/2, TILE*0.42, 0, 7); g.fill();
+    g.fillStyle="#4c6c3d";
+    g.beginPath(); g.arc(px+TILE/2-3, py+TILE/2-3, TILE*0.26, 0, 7); g.fill();
+  }
+  if(c==='#'|| (c>='1'&&c<='5')){ // building
+    const roofs = d?d.roof:["#777","#7c7c7c","#717171"];
+    const roof = roofs[Math.floor(rnd(x,y,7)*roofs.length)];
+    g.fillStyle="#4c4438"; g.fillRect(px,py,TILE,TILE);           // walls/shadow
+    g.fillStyle=roof;      g.fillRect(px+1,py+1,TILE-2,TILE-2);   // roof
+    g.fillStyle="rgba(255,255,255,0.12)"; g.fillRect(px+1,py+1,TILE-2,3); // ridge light
+    if(rnd(x,y,9)<.25){ g.fillStyle="rgba(40,34,26,0.5)"; g.fillRect(px+TILE-8,py+4,4,4); } // chimney
+    if(c>='1'&&c<='5'){ // a door tile: paint the door
+      const L = LETTERS[+c-1];
+      g.fillStyle="#3a3226"; g.fillRect(px+7,py+9,TILE-14,TILE-9);
+      g.fillStyle=L.doorColor; g.fillRect(px+8,py+10,TILE-16,TILE-11);
+      g.fillStyle="#e9c46a"; g.fillRect(px+TILE-11,py+16,2,2);    // handle
+    }
+  }
+}
+
+/* --- landmark sprites: drawn oversized, above tiles (and above fog as
+       silhouettes — the skyline you navigate by) --- */
+function drawLandmark(g, lm, px, py, time, alpha){
+  g.save(); g.globalAlpha = alpha;
+  const cx = px+TILE/2;
+  switch(lm.c){
+    case 'L':{ // lighthouse
+      const h=TILE*2.2, w=TILE*0.8, top=py+TILE-h;
+      g.fillStyle="#ded8ce"; g.fillRect(cx-w/2, top, w, h);
+      g.fillStyle="#b03a30";
+      g.fillRect(cx-w/2, top+h*0.2, w, h*0.16);
+      g.fillRect(cx-w/2, top+h*0.55, w, h*0.16);
+      g.fillStyle="#2c2a26"; g.fillRect(cx-w/2-2, top-6, w+4, 8);
+      const gl = 0.5+0.5*Math.sin(time/700);
+      g.fillStyle="rgba(255,225,130,"+(0.35+0.55*gl)+")";
+      g.beginPath(); g.arc(cx, top-2, 4+2*gl, 0, 7); g.fill();
+      break; }
+    case 'K':{ // cathedral
+      const h=TILE*2.4, w=TILE*1.1, top=py+TILE-h;
+      g.fillStyle="#8f8878"; g.fillRect(cx-w/2, top+h*0.35, w, h*0.65);
+      g.fillStyle="#7c7466";
+      g.beginPath(); g.moveTo(cx-w/2, top+h*0.38); g.lineTo(cx, top); g.lineTo(cx+w/2, top+h*0.38); g.closePath(); g.fill();
+      g.strokeStyle="#e8e4da"; g.lineWidth=2; g.beginPath();
+      g.moveTo(cx, top-9); g.lineTo(cx, top-1); g.moveTo(cx-3, top-6); g.lineTo(cx+3, top-6); g.stroke();
+      g.fillStyle="#5b5364"; g.beginPath(); g.arc(cx, top+h*0.62, 3.4, 0, 7); g.fill(); // rose window
+      break; }
+    case 'C':{ // clock tower
+      const h=TILE*2.6, w=TILE*0.85, top=py+TILE-h;
+      g.fillStyle="#9a938a"; g.fillRect(cx-w/2, top, w, h);
+      g.fillStyle="#6e675e"; g.fillRect(cx-w/2-2, top-5, w+4, 7);
+      g.fillStyle="#f2ead2"; g.beginPath(); g.arc(cx, top+h*0.28, w*0.36, 0, 7); g.fill();
+      const now=new Date(), a1=(now.getHours()%12)/12*2*Math.PI-Math.PI/2, a2=now.getMinutes()/60*2*Math.PI-Math.PI/2;
+      g.strokeStyle="#2b2a28"; g.lineWidth=1.4; g.beginPath();
+      g.moveTo(cx,top+h*0.28); g.lineTo(cx+Math.cos(a1)*w*0.2, top+h*0.28+Math.sin(a1)*w*0.2);
+      g.moveTo(cx,top+h*0.28); g.lineTo(cx+Math.cos(a2)*w*0.3, top+h*0.28+Math.sin(a2)*w*0.3); g.stroke();
+      break; }
+    case 'W':{ // windmill, sails turning
+      const h=TILE*1.9, w=TILE*1.0, top=py+TILE-h;
+      g.fillStyle="#8a7a5e";
+      g.beginPath(); g.moveTo(cx-w/2, py+TILE); g.lineTo(cx-w*0.3, top); g.lineTo(cx+w*0.3, top); g.lineTo(cx+w/2, py+TILE); g.closePath(); g.fill();
+      g.fillStyle="#5f5340"; g.beginPath(); g.arc(cx, top, 3, 0, 7); g.fill();
+      g.strokeStyle="#efe7d2"; g.lineWidth=3;
+      const a0=time/1600;
+      for(let k=0;k<4;k++){
+        const a=a0+k*Math.PI/2;
+        g.beginPath(); g.moveTo(cx,top); g.lineTo(cx+Math.cos(a)*TILE*1.05, top+Math.sin(a)*TILE*1.05); g.stroke();
+      }
+      break; }
+    case 'F':{ // fountain
+      g.fillStyle="#b8b0a2"; g.beginPath(); g.arc(cx, py+TILE/2, TILE*0.48, 0, 7); g.fill();
+      g.fillStyle="#3f7fa8"; g.beginPath(); g.arc(cx, py+TILE/2, TILE*0.34, 0, 7); g.fill();
+      const r = (time/500)%1;
+      g.strokeStyle="rgba(220,240,255,"+(1-r)*0.8+")"; g.lineWidth=1.5;
+      g.beginPath(); g.arc(cx, py+TILE/2, TILE*0.12+r*TILE*0.2, 0, 7); g.stroke();
+      g.fillStyle="#dff0ff"; g.fillRect(cx-1, py+TILE/2-9, 2, 6);
+      break; }
+  }
+  g.restore();
+}
+
+function drawPlayer(g, px, py, time){
+  const bob = Math.sin(time/180)* (keysDown() ? 1.6 : 0.4);
+  const x=px+TILE/2, y=py+TILE/2+bob;
+  g.fillStyle="rgba(0,0,0,0.3)"; g.beginPath(); g.ellipse(px+TILE/2, py+TILE-3, 7,3,0,0,7); g.fill();
+  g.fillStyle="#7a3b2e"; g.fillRect(x-5, y-4, 10, 12);              // coat
+  g.fillStyle="#e0b98f"; g.beginPath(); g.arc(x, y-8, 5, 0, 7); g.fill(); // head
+  g.fillStyle="#4a3b2a"; g.fillRect(x-5.5, y-13, 11, 3.5);          // hat brim
+  g.fillRect(x-3.5, y-17, 7, 5);                                    // hat top
+  g.fillStyle="#c9a227"; g.fillRect(x+(state.facing>0?3:-7), y+1, 4, 6); // satchel
+}
+
+function keysDown(){ return keys.size>0; }
+
+/* fog pass */
+function drawFog(g, x0,y0,x1,y1, camX,camY){
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+    const px=x*TILE-camX, py=y*TILE-camY;
+    const d = dist(x,y,state.px,state.py);
+    if(!state.explored[y][x]){
+      g.fillStyle="#0b0e12"; g.fillRect(px-0.5,py-0.5,TILE+1,TILE+1);
+    } else if(d>VIS){
+      const a = Math.min(0.62, 0.30+0.05*(d-VIS));
+      g.fillStyle="rgba(9,12,18,"+a+")"; g.fillRect(px-0.5,py-0.5,TILE+1,TILE+1);
+    } else if(d>VIS-1.6){
+      g.fillStyle="rgba(9,12,18,"+(0.28*(d-(VIS-1.6))/1.6)+")"; g.fillRect(px-0.5,py-0.5,TILE+1,TILE+1);
+    }
+  }
+}
+
+function render(time){
+  ctx.fillStyle="#0b0e12"; ctx.fillRect(0,0,VIEWW,VIEWH);
+  // camera
+  let camX = state.drawX + TILE/2 - VIEWW/2;
+  let camY = state.drawY + TILE/2 - VIEWH/2;
+  camX = Math.max(0, Math.min(MAPW*TILE-VIEWW, camX));
+  camY = Math.max(0, Math.min(MAPH*TILE-VIEWH, camY));
+  const x0=Math.max(0,Math.floor(camX/TILE)), y0=Math.max(0,Math.floor(camY/TILE));
+  const x1=Math.min(MAPW-1,Math.ceil((camX+VIEWW)/TILE)), y1=Math.min(MAPH-1,Math.ceil((camY+VIEWH)/TILE));
+
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)
+    drawTile(ctx,x,y,x*TILE-camX,y*TILE-camY,time);
+
+  // door name plates when close
+  ctx.textAlign="center"; ctx.font="12px Georgia";
+  for(const L of LETTERS){
+    const D=doors[L.door];
+    if(dist(state.px,state.py,D.x,D.y)<3.6 && state.explored[D.y][D.x]){
+      const px=D.x*TILE-camX+TILE/2, py=D.y*TILE-camY-6;
+      const w = ctx.measureText(L.houseName).width+12;
+      ctx.fillStyle="rgba(14,17,24,0.85)"; ctx.fillRect(px-w/2,py-13,w,16);
+      ctx.fillStyle="#e8e4da"; ctx.fillText(L.houseName, px, py-1);
+    }
+  }
+
+  drawPlayer(ctx, state.drawX-camX, state.drawY-camY, time);
+  drawFog(ctx,x0,y0,x1,y1,camX,camY);
+
+  // landmarks above the fog — silhouettes you steer by
+  for(const lm of landmarks){
+    const d = dist(state.px,state.py,lm.x,lm.y);
+    const vis = d<=VIS, far = d<=lm.reveal, seen = state.explored[lm.y][lm.x];
+    let a = 0;
+    if(vis) a=1; else if(far) a=0.85; else if(seen) a=0.45;
+    if(a===0) continue;
+    const px=lm.x*TILE-camX, py=lm.y*TILE-camY;
+    if(px<-TILE*3||px>VIEWW+TILE*3||py<-TILE*3||py>VIEWH+TILE*3) continue;
+    drawLandmark(ctx, lm, px, py, time, a);
+    if(far && !vis){
+      ctx.font="italic 12px Georgia"; ctx.textAlign="center";
+      ctx.fillStyle="rgba(232,228,218,0.75)";
+      ctx.fillText(lm.name, px+TILE/2, py+TILE+12);
+    }
+  }
+
+  // delivery prompt
+  let near=false;
+  if(state.mode==="play" && !state.overlay && state.letter<LETTERS.length){
+    const D=doors[LETTERS[state.letter].door];
+    near = Math.abs(state.px-D.x)+Math.abs(state.py-D.y)===1;
+  }
+  $("prompt").style.display = near ? "block" : "none";
+}
+
+/* "true map" for the ending — the cartographic view withheld all game */
+function drawTrueMap(canvas){
+  const g=canvas.getContext("2d");
+  const s = Math.min(canvas.width/MAPW, canvas.height/MAPH);
+  g.fillStyle="#f4ecd8"; g.fillRect(0,0,canvas.width,canvas.height);
+  for(let y=0;y<MAPH;y++)for(let x=0;x<MAPW;x++){
+    const c=at(x,y); let col="#efe6cf";
+    if(c==='~') col="#9dbccb";
+    else if(c==='d'||c==='=') col="#c2a071";
+    else if(c==='.') col="#efe6cf";
+    else if(c==='p') col="#e8d9b4";
+    else if(c==='g') col="#b9c99b";
+    else if(c==='t') col="#93ab77";
+    else col="#c9b795"; // buildings
+    g.fillStyle=col; g.fillRect(x*s, y*s, s+0.5, s+0.5);
+  }
+  g.fillStyle="#8a2f23";
+  for(const L of LETTERS){ const D=doors[L.door]; g.fillRect(D.x*s-1, D.y*s-1, s+2, s+2); }
+  g.fillStyle="#2b3a55"; g.font="italic "+Math.round(s*3.2)+"px Georgia"; g.textAlign="center";
+  for(const lm of landmarks){
+    g.beginPath(); g.arc(lm.x*s+s/2, lm.y*s+s/2, s*0.9, 0, 7); g.fill();
+  }
+  g.fillStyle="#5a4a33"; g.font="italic 13px Georgia";
+  g.fillText("VELLHAVEN — surveyor's plan", canvas.width/2, canvas.height-8);
+}
+
+/* =====================================================================
+   INPUT & GAME LOOP
+   ===================================================================== */
+const keys = new Set();
+const DIRS = {ArrowUp:[0,-1], ArrowDown:[0,1], ArrowLeft:[-1,0], ArrowRight:[1,0],
+              KeyW:[0,-1], KeyS:[0,1], KeyA:[-1,0], KeyD:[1,0]};
+
+document.addEventListener("keydown", e=>{
+  if(DIRS[e.code]){ keys.add(e.code); e.preventDefault(); }
+
+  if(state.mode==="title" && (e.code==="Enter"||e.code==="KeyE"||e.code==="Space")){ startGame(); return; }
+
+  if(e.code==="KeyE" || e.code==="Enter"){
+    if(state.overlay==="letter"){ showOverlay(null); return; }
+    if(state.overlay==="vignette"){ showOverlay(null); afterVignette(); return; }
+    if(state.overlay==="help"){ showOverlay(null); return; }
+    if(state.mode==="play" && !state.overlay && state.letter<LETTERS.length){
+      const D=doors[LETTERS[state.letter].door];
+      if(Math.abs(state.px-D.x)+Math.abs(state.py-D.y)===1) deliverCurrent();
+    }
+  }
+  if(e.code==="KeyT" && state.mode==="play" && !state.overlay && state.letter<LETTERS.length) openLetter();
+  if(e.code==="KeyH" && state.mode==="play"){
+    if(state.overlay==="help") showOverlay(null);
+    else if(!state.overlay) showOverlay("help");
+  }
+  if(e.code==="KeyM" && state.mode==="play"){
+    if(state.overlay==="sketch") showOverlay(null);
+    else if(!state.overlay) showOverlay("sketch");
+  }
+  if(e.code==="KeyR" && state.mode==="end") location.reload();
+  if(e.code==="KeyN" && TESTMODE && state.mode==="play" && !state.overlay && state.letter<LETTERS.length)
+    deliverCurrent(); // test hook
+});
+document.addEventListener("keyup", e=>keys.delete(e.code));
+
+function tryStep(dx,dy){
+  const nx=state.px+dx, ny=state.py+dy;
+  if(dx) state.facing = dx;
+  if(!walkable(nx,ny)) return;
+  state.px=nx; state.py=ny; state.steps++;
+  explore(nx,ny);
+  const d=districtAt(nx,ny);
+  if(d && !state.seen.has(d.name) && at(nx,ny)!=='~'){
+    state.seen.add(d.name); toast("You enter "+d.name);
+  }
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=now-last; last=now;
+  if(state.mode==="play" && !state.overlay){
+    state.moveCooldown -= dt;
+    if(state.moveCooldown<=0){
+      for(const k of keys){ if(DIRS[k]){ tryStep(...DIRS[k]); state.moveCooldown=112; break; } }
+      if(keys.size===0) state.moveCooldown=0;
+    }
+  }
+  // ease the drawn position toward the tile
+  const tx=state.px*TILE, ty=state.py*TILE, e=1-Math.pow(0.0018, dt/1000);
+  state.drawX += (tx-state.drawX)*Math.min(1,e*14*dt/16);
+  state.drawY += (ty-state.drawY)*Math.min(1,e*14*dt/16);
+  if(Math.abs(tx-state.drawX)<0.4) state.drawX=tx;
+  if(Math.abs(ty-state.drawY)<0.4) state.drawY=ty;
+
+  render(now);
+  requestAnimationFrame(loop);
+}
+
+/* =====================================================================
+   SKETCHBOOK
+   ===================================================================== */
+const sketchCv=$("sketch"), sk=sketchCv.getContext("2d");
+sk.fillStyle="#f4ecd8"; sk.fillRect(0,0,sketchCv.width,sketchCv.height);
+sk.lineCap="round"; sk.lineJoin="round";
+let tool="ink", size=2.2, drawing=false, lx=0, ly=0;
+const TOOLC = {ink:"#2b3a55", red:"#a03a2e"};
+function skPos(ev){
+  const r=sketchCv.getBoundingClientRect();
+  return [ (ev.clientX-r.left)*sketchCv.width/r.width, (ev.clientY-r.top)*sketchCv.height/r.height ];
+}
+sketchCv.addEventListener("pointerdown", ev=>{ drawing=true; [lx,ly]=skPos(ev); sketchCv.setPointerCapture(ev.pointerId); });
+sketchCv.addEventListener("pointermove", ev=>{
+  if(!drawing) return;
+  const [x,y]=skPos(ev);
+  if(tool==="erase"){ sk.strokeStyle="#f4ecd8"; sk.lineWidth=18; }
+  else { sk.strokeStyle=TOOLC[tool]; sk.lineWidth=size; }
+  sk.beginPath(); sk.moveTo(lx,ly); sk.lineTo(x,y); sk.stroke();
+  lx=x; ly=y;
+});
+sketchCv.addEventListener("pointerup", ()=>drawing=false);
+document.querySelectorAll("#sketchBar button[data-tool]").forEach(b=>{
+  b.addEventListener("click",()=>{
+    tool=b.dataset.tool;
+    document.querySelectorAll("#sketchBar button[data-tool]").forEach(x=>x.classList.toggle("active",x===b));
+  });
+});
+$("thinBtn").addEventListener("click",()=>{size=2.2; $("thinBtn").classList.add("active"); $("thickBtn").classList.remove("active");});
+$("thickBtn").addEventListener("click",()=>{size=5;  $("thickBtn").classList.add("active"); $("thinBtn").classList.remove("active");});
+$("clearSketch").addEventListener("click",()=>{ sk.fillStyle="#f4ecd8"; sk.fillRect(0,0,sketchCv.width,sketchCv.height); });
+$("closeSketch").addEventListener("click",()=>showOverlay(null));
+$("titleOverlay").addEventListener("click",()=>{ if(state.mode==="title") startGame(); });
+
+/* =====================================================================
+   TEST / SCREENSHOT POSES  (#pose=1..4, #debug)
+   ===================================================================== */
+const hash = location.hash;
+const TESTMODE = /#(pose|debug)/.test(hash);
+function poseSketchExample(){
+  // a plausible hand-drawn map, for the end-reveal screenshot
+  const w=sketchCv.width, h=sketchCv.height;
+  const wob = (x,y,j=3)=>[x+ (Math.random()-0.5)*j, y+(Math.random()-0.5)*j];
+  function scrawl(pts, color="#2b3a55", lw=2.2){
+    sk.strokeStyle=color; sk.lineWidth=lw; sk.beginPath();
+    pts.forEach((p,i)=>{ const [x,y]=wob(p[0]*w,p[1]*h); i?sk.lineTo(x,y):sk.moveTo(x,y); });
+    sk.stroke();
+  }
+  scrawl([[0.10,0.05],[0.11,0.3],[0.09,0.55],[0.12,0.8],[0.10,0.97]]);            // coast
+  scrawl([[0.56,0.03],[0.55,0.2],[0.57,0.38],[0.5,0.42],[0.35,0.45],[0.12,0.44]]); // river
+  scrawl([[0.3,0.62],[0.42,0.6],[0.44,0.75],[0.31,0.77],[0.3,0.62]]);              // plaza
+  scrawl([[0.62,0.55],[0.95,0.55]],"#2b3a55",1.6); scrawl([[0.62,0.7],[0.95,0.7]],"#2b3a55",1.6);
+  scrawl([[0.7,0.5],[0.7,0.9]],"#2b3a55",1.6);     scrawl([[0.82,0.5],[0.82,0.9]],"#2b3a55",1.6);
+  scrawl([[0.115,0.10],[0.15,0.10]],"#a03a2e");                                    // lighthouse tick
+  scrawl([[0.47,0.18],[0.47,0.26]],"#a03a2e"); scrawl([[0.45,0.18],[0.49,0.18]],"#a03a2e"); // tower
+  scrawl([[0.8,0.12],[0.84,0.16]],"#a03a2e"); scrawl([[0.84,0.12],[0.8,0.16]],"#a03a2e");   // mill x
+  sk.fillStyle="#2b3a55"; sk.font="italic 15px Georgia";
+  sk.fillText("harbour", 0.03*w, 0.35*h); sk.fillText("river?", 0.44*w, 0.34*h);
+  sk.fillText("plaza + fountain", 0.28*w, 0.85*h); sk.fillText("the grid", 0.72*w, 0.95*h);
+  sk.fillText("mill on the hill", 0.74*w, 0.09*h); sk.fillText("clock twr", 0.40*w, 0.15*h);
+}
+function applyPose(){
+  const m = hash.match(/#pose=(\d)/);
+  if(!m) return false;
+  const p = +m[1];
+  state.mode="play"; state.t0=performance.now();
+  overlays.title.classList.remove("show");
+  if(p===1){ state.px=6; state.py=6; state.letter=0;
+    for(let y=0;y<16;y++) explore(6,y,4.5); explore(6,6);
+  }
+  if(p===2){ state.px=14; state.py=23; state.letter=1; state.delivered=1;
+    for(let x=6;x<20;x++) explore(x,23,4); explore(14,23); explore(6,24,5);
+  }
+  if(p===3){ state.px=14; state.py=23; state.letter=1; state.delivered=1;
+    explore(14,23); poseSketchExample(); showOverlay("sketch");
+  }
+  if(p===4){ state.delivered=5; state.letter=5; state.steps=1240;
+    state.px=41; state.py=6;
+    for(let y=0;y<MAPH;y++)for(let x=0;x<MAPW;x++) if(Math.random()<0.62) state.explored[y][x]=true;
+    poseSketchExample();
+    state.t0 = performance.now()-872000;
+    finishGame();
+  }
+  state.drawX=state.px*TILE; state.drawY=state.py*TILE;
+  updateHud();
+  return true;
+}
+if(!applyPose()){ explore(state.px, state.py, 7); /* the ferry landing is all you know */ }
+updateHud();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
