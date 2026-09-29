@@ -10,10 +10,10 @@ Prototype: browser game (`blind-cartographer.html`)
 
 *Blind Cartographer* is a small single player exploration game that runs in the browser. The idea behind it came from a simple inversion of something I kept noticing in games that are set in cities, which is that almost all of them hand the player a map first and then fill it with markers and icons. In my prototype I tried to do the opposite, the player gets a whole city but never gets a map of it.
 
-The player takes the role of a courier who arrives by ferry in Vellhaven, a harbor town whose old mapmaker, Odell Marrow, has just passed away. In his will he leaves five letters and only one condition, that they have to be delivered by someone who has never seen a map of his city. Because of that there is no minimap, no compass and no quest arrow in the game. Each envelope is addressed the way people actually give directions to each other in real life, for example *"keep the water at your left hand until the lighthouse rises over the piers."* The player walks around, reads the skyline and, if they want to, draws their own map in a sketchbook inside the game. Only after the last letter is delivered the game shows a map for the first time, which is the surveyor's plan of Vellhaven placed next to the player's own drawing.
+The player takes the role of a courier who arrives by ferry in Maya Sol, a harbor town whose old mapmaker, Wade Wilson, has just passed away. In his will he leaves five letters and only one condition, that they have to be delivered by someone who has never seen a map of his city. Because of that there is no minimap, no compass and no quest arrow in the game. Each envelope is addressed the way people actually give directions to each other in real life, for example *"keep the water at your left hand until the lighthouse rises over the piers."* The player walks around, reads the skyline and, if they want to, draws their own map in a sketchbook inside the game. Only after the last letter is delivered the game shows a map for the first time, which is the surveyor's plan of Maya Sol placed next to the player's own drawing.
 
 ![The arrival: fog hides everything the courier has not walked](figures/shot-title.png)
-*Figure 1: The arrival. Only the ferry landing is known and the rest of Vellhaven is covered in fog.*
+*Figure 1: The arrival. Only the ferry landing is known and the rest of Maya Sol is covered in fog.*
 
 ![Navigating by the skyline](figures/shot-lighthouse.png)
 *Figure 2: Playing the first letter. The lighthouse is found, and the silhouette of the Cathedral floats above the fog as a distant cue.*
@@ -26,12 +26,12 @@ It is a short exploration and navigation game that takes around 15 to 25 minutes
 
 The main design rule I set for myself was that every navigational aid in the game has to be a part of the city and not a part of the interface. Kevin Lynch's five elements of urban legibility (Lynch 1960) became my actual level design checklist (Figure 3). These are paths (a winding web of streets in the Old Town compared to the ruled grid of the New Quarter), edges (the harbor front and the river, which divide the city and force the player to make decisions at the bridges), districts (five wards, each with its own colors, roofs and street patterns), nodes (the fountain plaza where the market streets come together) and landmarks (the lighthouse, cathedral, clock tower and windmill, which are tall enough to be seen above the fog from far away, similar to the towers in *The Legend of Zelda: Breath of the Wild* (Nintendo 2017)).
 
-![Design scribble of Vellhaven with Lynch's five elements](figures/fig-lynch.svg)
-*Figure 3: Design scribble of Vellhaven, planned as an exercise in Lynch's five elements.*
+![Design scribble of Maya Sol with Lynch's five elements](figures/fig-lynch.svg)
+*Figure 3: Design scribble of Maya Sol, planned as an exercise in Lynch's five elements.*
 
 ### Story: What do I want to tell?
 
-The story tries to make the same argument as the mechanics. Odell Marrow spent his whole life drawing maps and at some point stopped believing in them, and his last wish is that his farewell letters are carried by someone who has to learn the city instead of just reading it. Every delivered letter opens a short vignette that connects one recipient to one element of urban form. The harbormaster is connected to the edge that anchored Odell's first survey, the baker to the plaza as a node ("the centre is wherever the bread is still warm"), the clockmaker to the landmark ("mercy for lost men") and the widow Alvey to the grid of the New Quarter, which is easy to read but has no character and which Odell drew himself and later regrets. And last but not least, the miller is connected to the farewell itself: *"the truest map of a city is worn into the soles of one's shoes."* The journey of the player is what makes this claim true, since by the fifth letter they are moving confidently through a city that was nothing but fog an hour before. De Certeau's (1984) distinction between the view from above and the walker down in the streets is basically the arc of the whole game, because the player is the walker the entire time and only receives the view from above at the very end.
+The story tries to make the same argument as the mechanics. Wade Wilson spent his whole life drawing maps and at some point stopped believing in them, and his last wish is that his farewell letters are carried by someone who has to learn the city instead of just reading it. Every delivered letter opens a short vignette that connects one recipient to one element of urban form. The harbormaster is connected to the edge that anchored Wade's first survey, the baker to the plaza as a node ("the centre is wherever the bread is still warm"), the clockmaker to the landmark ("mercy for lost men") and the widow Alvey to the grid of the New Quarter, which is easy to read but has no character and which Wade drew himself and later regrets. And last but not least, the miller is connected to the farewell itself: *"the truest map of a city is worn into the soles of one's shoes."* The journey of the player is what makes this claim true, since by the fifth letter they are moving confidently through a city that was nothing but fog an hour before. De Certeau's (1984) distinction between the view from above and the walker down in the streets is basically the arc of the whole game, because the player is the walker the entire time and only receives the view from above at the very end.
 
 ![The plaza node](figures/shot-plaza.png)
 *Figure 4: The plaza as a node. The paths gather at the fountain while the clock tower stands on the horizon of the fog.*
@@ -90,6 +90,6 @@ Ludography
 
 *The Legend of Zelda: Breath of the Wild* (Nintendo 2017), towers and landmark navigation
 
-## 6. Team Members: Contributions
+## 6. Contributions
 
-This is a solo project. Jaber Rashki Ghaleh No (12452808): concept and research, city and level design, writing (letters and story), programming, playtesting and tuning, and this report.
+This was a solo project, so I did all of the work myself, from the concept and research to the level design, writing, programming, playtesting and this report.

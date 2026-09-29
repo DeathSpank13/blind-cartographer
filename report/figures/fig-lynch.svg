@@ -8,7 +8,7 @@
   <rect width="900" height="540" fill="#f4ecd8"/>
   <rect x="10" y="10" width="880" height="520" fill="none" stroke="#c9b894" stroke-width="1.5"/>
 
-  <text x="450" y="44" text-anchor="middle" font-size="24" fill="#2b3a55">Vellhaven, planned with Kevin Lynch's five elements</text>
+  <text x="450" y="44" text-anchor="middle" font-size="24" fill="#2b3a55">Maya Sol, planned with Kevin Lynch's five elements</text>
 
   <!-- ==== the sketch-map (center-left) ==== -->
   <g stroke-linecap="round" stroke-linejoin="round" fill="none">
