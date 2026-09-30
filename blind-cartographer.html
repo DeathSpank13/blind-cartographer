@@ -132,6 +132,7 @@
       <p>That someone is you. You step off the ferry with his satchel. No map. No markers.
       Only the city itself: its water, its streets, its towers. Learn it the way he did,
       and if you like, draw what you learn in your sketchbook. At journey's end, we will compare.</p>
+      <p>Your memory is short: streets fade behind you once you pass. Draw what you want to keep.</p>
       <p class="controls">
         <kbd>W A S D</kbd> or arrows to walk &nbsp;·&nbsp; <kbd>E</kbd> to deliver or continue<br>
         <kbd>M</kbd> sketchbook &nbsp;·&nbsp; <kbd>T</kbd> re-read the letter &nbsp;·&nbsp; <kbd>H</kbd> help
@@ -174,6 +175,8 @@
       <p>There is no map and no compass. Watch for <b>tall landmarks</b> above the rooftops,
       keep track of <b>edges</b> such as the river and the waterfront, and learn the character of each
       <b>district</b>. The letters describe every address by such things.</p>
+      <p>Your memory is short: streets fade behind you once you pass, and doors vanish entirely.
+      Draw what you want to keep in your sketchbook (<kbd>M</kbd>).</p>
       <p class="go">press H or E to close</p>
     </div>
   </div>
@@ -332,7 +335,8 @@ const LETTERS = [
 ];
 
 /* ---------------- state ---------------- */
-const TILE = 24, VIEWW = 960, VIEWH = 624;
+const TILE = 32, VIEWW = 960, VIEWH = 624;
+const S = TILE/24;         // sprite details were drawn for 24px tiles
 const state = {
   mode:"title",            // title | play | end
   px:5, py:24,             // player tile
@@ -479,7 +483,7 @@ function drawTile(g,x,y,px,py,time){
     if(c==='='){ g.strokeStyle="#4a3722"; g.strokeRect(px+1.5,py+1.5,TILE-3,TILE-3); }
   }
   if(c==='.'){ // faint cobble dots
-    if(rnd(x,y,3)<.3){ g.fillStyle="rgba(70,64,55,0.18)"; g.fillRect(px+6+8*rnd(x,y,4), py+6+8*rnd(x,y,5), 3,3); }
+    if(rnd(x,y,3)<.3){ g.fillStyle="rgba(70,64,55,0.18)"; g.fillRect(px+S*(6+8*rnd(x,y,4)), py+S*(6+8*rnd(x,y,5)), 3*S,3*S); }
   }
   if(c==='p'){ g.strokeStyle="rgba(120,105,75,0.35)"; g.strokeRect(px+.5,py+.5,TILE-1,TILE-1); }
   if(c==='t'){ // tree
@@ -494,12 +498,12 @@ function drawTile(g,x,y,px,py,time){
     g.fillStyle="#4c4438"; g.fillRect(px,py,TILE,TILE);           // walls/shadow
     g.fillStyle=roof;      g.fillRect(px+1,py+1,TILE-2,TILE-2);   // roof
     g.fillStyle="rgba(255,255,255,0.12)"; g.fillRect(px+1,py+1,TILE-2,3); // ridge light
-    if(rnd(x,y,9)<.25){ g.fillStyle="rgba(40,34,26,0.5)"; g.fillRect(px+TILE-8,py+4,4,4); } // chimney
+    if(rnd(x,y,9)<.25){ g.fillStyle="rgba(40,34,26,0.5)"; g.fillRect(px+TILE-8*S,py+4*S,4*S,4*S); } // chimney
     if(c>='1'&&c<='5'){ // a door tile: paint the door
       const L = LETTERS[+c-1];
-      g.fillStyle="#3a3226"; g.fillRect(px+7,py+9,TILE-14,TILE-9);
-      g.fillStyle=L.doorColor; g.fillRect(px+8,py+10,TILE-16,TILE-11);
-      g.fillStyle="#e9c46a"; g.fillRect(px+TILE-11,py+16,2,2);    // handle
+      g.fillStyle="#3a3226"; g.fillRect(px+7*S,py+9*S,TILE-14*S,TILE-9*S);
+      g.fillStyle=L.doorColor; g.fillRect(px+8*S,py+10*S,TILE-16*S,TILE-11*S);
+      g.fillStyle="#e9c46a"; g.fillRect(px+TILE-11*S,py+16*S,2*S,2*S);    // handle
     }
   }
 }
@@ -566,31 +570,62 @@ function drawLandmark(g, lm, px, py, time, alpha){
 
 function drawPlayer(g, px, py, time){
   const bob = Math.sin(time/180)* (keysDown() ? 1.6 : 0.4);
-  const x=px+TILE/2, y=py+TILE/2+bob;
-  g.fillStyle="rgba(0,0,0,0.3)"; g.beginPath(); g.ellipse(px+TILE/2, py+TILE-3, 7,3,0,0,7); g.fill();
+  g.save(); g.translate(px+TILE/2, py+TILE/2); g.scale(S,S);
+  const x=0, y=bob;
+  g.fillStyle="rgba(0,0,0,0.3)"; g.beginPath(); g.ellipse(0, 9, 7,3,0,0,7); g.fill();
   g.fillStyle="#7a3b2e"; g.fillRect(x-5, y-4, 10, 12);              // coat
   g.fillStyle="#e0b98f"; g.beginPath(); g.arc(x, y-8, 5, 0, 7); g.fill(); // head
   g.fillStyle="#4a3b2a"; g.fillRect(x-5.5, y-13, 11, 3.5);          // hat brim
   g.fillRect(x-3.5, y-17, 7, 5);                                    // hat top
   g.fillStyle="#c9a227"; g.fillRect(x+(state.facing>0?3:-7), y+1, 4, 6); // satchel
+  g.restore();
 }
 
 function keysDown(){ return keys.size>0; }
 
-/* fog pass */
+/* fog pass: only what is in sight is shown in full. Places already walked
+   leave a faint ghost of open ground and water, never buildings or doors;
+   anything the player wants to keep must go into the sketchbook */
+const EDGE = 1.6;          // width of the soft rim at the edge of sight
 function drawFog(g, x0,y0,x1,y1, camX,camY){
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
     const px=x*TILE-camX, py=y*TILE-camY;
     const d = dist(x,y,state.px,state.py);
-    if(!state.explored[y][x]){
-      g.fillStyle="#0b0e12"; g.fillRect(px-0.5,py-0.5,TILE+1,TILE+1);
-    } else if(d>VIS){
-      const a = Math.min(0.62, 0.30+0.05*(d-VIS));
-      g.fillStyle="rgba(9,12,18,"+a+")"; g.fillRect(px-0.5,py-0.5,TILE+1,TILE+1);
-    } else if(d>VIS-1.6){
-      g.fillStyle="rgba(9,12,18,"+(0.28*(d-(VIS-1.6))/1.6)+")"; g.fillRect(px-0.5,py-0.5,TILE+1,TILE+1);
+    if(d<=VIS && state.explored[y][x]){
+      if(d>VIS-EDGE){
+        g.fillStyle="rgba(11,14,18,"+(0.85*(d-(VIS-EDGE))/EDGE)+")"; g.fillRect(px-0.5,py-0.5,TILE+1,TILE+1);
+      }
+      continue;
     }
+    g.fillStyle="#0b0e12"; g.fillRect(px-0.5,py-0.5,TILE+1,TILE+1);
+    if(!state.explored[y][x]) continue;
+    const c=at(x,y);
+    if(WALKABLE.has(c))  g.fillStyle="rgba(200,190,165,0.07)";
+    else if(c==='~')     g.fillStyle="rgba(70,120,160,0.08)";
+    else continue;
+    g.fillRect(px-0.5,py-0.5,TILE+1,TILE+1);
   }
+}
+
+/* a landmark within its reveal range but off-screen is pinned, small and
+   faint, to the screen edge in its true direction: a tower glimpsed over
+   the rooftops, with no distance given */
+const HINT = {left:50, right:VIEWW-50, top:100, bottom:VIEWH-34, scale:0.6};
+function drawSkylineHint(lm, tx, ty, ox, oy, time){
+  ox = Math.max(HINT.left, Math.min(HINT.right, ox));
+  oy = Math.max(HINT.top,  Math.min(HINT.bottom, oy));
+  const dx=tx-ox, dy=ty-oy;
+  const tX = dx>0 ? (HINT.right-ox)/dx : dx<0 ? (HINT.left-ox)/dx : Infinity;
+  const tY = dy>0 ? (HINT.bottom-oy)/dy : dy<0 ? (HINT.top-oy)/dy : Infinity;
+  const t = Math.min(tX, tY);
+  if(!isFinite(t)) return;
+  const ex=ox+dx*t, ey=oy+dy*t;
+  ctx.save(); ctx.translate(ex,ey); ctx.scale(HINT.scale,HINT.scale);
+  drawLandmark(ctx, lm, -TILE/2, -TILE/2, time, 0.6);
+  ctx.restore();
+  ctx.font="italic 12px Georgia"; ctx.textAlign="center";
+  ctx.fillStyle="rgba(232,228,218,0.6)";
+  ctx.fillText(lm.name, ex, ey+TILE*HINT.scale/2+13);
 }
 
 function render(time){
@@ -629,6 +664,8 @@ function render(time){
     if(vis) a=1; else if(far) a=0.85; else if(seen) a=0.45;
     if(a===0) continue;
     const px=lm.x*TILE-camX, py=lm.y*TILE-camY;
+    const onScreen = px+TILE/2>=0 && px+TILE/2<=VIEWW && py+TILE/2>=0 && py+TILE/2<=VIEWH;
+    if(!onScreen && far){ drawSkylineHint(lm, px+TILE/2, py+TILE/2, state.drawX-camX+TILE/2, state.drawY-camY+TILE/2, time); continue; }
     if(px<-TILE*3||px>VIEWW+TILE*3||py<-TILE*3||py>VIEWH+TILE*3) continue;
     drawLandmark(ctx, lm, px, py, time, a);
     if(far && !vis){
