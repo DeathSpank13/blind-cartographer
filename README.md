@@ -26,7 +26,7 @@ Open `blind-cartographer.html` in a browser, or play it on the project page.
 |---|---|
 | W A S D or arrows | walk |
 | E | deliver a letter at its door or continue a dialog |
-| M | open your sketchbook and draw your own map |
+| M | open your sketchbook and draw or stamp your own map |
 | T | read the directions of the current letter again |
 | H | help |
 | R | play again (on the ending screen) |

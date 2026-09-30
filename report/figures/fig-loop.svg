@@ -57,6 +57,6 @@
     <text x="493" y="322" text-anchor="middle" font-size="14" fill="#2b3a55">each delivery starts farther from what you already know</text>
 
     <!-- finale note -->
-    <text x="450" y="372" text-anchor="middle" font-size="15" fill="#7a3b2e">finale: the game shows its map for the first time — beside yours. The comparison, not a score, is the reward.</text>
+    <text x="450" y="372" text-anchor="middle" font-size="15" fill="#7a3b2e">finale: the game shows its map for the first time, beside yours. The comparison, not a score, is the reward.</text>
   </g>
 </svg>

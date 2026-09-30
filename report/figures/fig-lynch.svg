@@ -65,24 +65,24 @@
 
   <!-- ==== annotations ==== -->
   <g font-size="16" fill="#7a3b2e">
-    <text x="60" y="250" transform="rotate(-90 60 250)" text-anchor="middle">EDGE — the harbourfront</text>
+    <text x="60" y="250" transform="rotate(-90 60 250)" text-anchor="middle">EDGE: the harbourfront</text>
     <path d="M78,220 C95,222 115,230 140,240" stroke="#7a3b2e" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
 
-    <text x="560" y="118">EDGE — the river</text>
+    <text x="560" y="118">EDGE: the river</text>
     <path d="M556,113 C530,108 515,105 502,108" stroke="#7a3b2e" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
 
-    <text x="236" y="222" fill="#8a6f4d">PATHS — winding in the Old Town…</text>
+    <text x="236" y="222" fill="#8a6f4d">PATHS: winding in the Old Town…</text>
     <text x="530" y="487" fill="#5c6b85">…ruled straight in the New Quarter</text>
     <text x="530" y="508" fill="#5c6b85" font-size="13">(every DISTRICT keeps its own character)</text>
 
-    <text x="230" y="465" fill="#2b3a55">NODE — the plaza, where paths gather</text>
+    <text x="230" y="465" fill="#2b3a55">NODE: the plaza, where paths gather</text>
     <path d="M310,448 C318,437 322,428 325,412" stroke="#2b3a55" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
 
-    <text x="590" y="70">LANDMARKS — pierce the fog</text>
+    <text x="590" y="70">LANDMARKS: pierce the fog</text>
     <path d="M600,78 C560,88 510,76 452,68" stroke="#7a3b2e" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
     <path d="M700,80 C690,110 680,130 670,145" stroke="#7a3b2e" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
 
-    <text x="600" y="248" fill="#5f7a4a">Millfields — the green district</text>
+    <text x="600" y="248" fill="#5f7a4a">Millfields, the green district</text>
   </g>
 
   <text x="450" y="522" text-anchor="middle" font-size="14" fill="#8a6f4d">design scribble: every navigational aid in the game is a piece of the city, not a piece of UI</text>

@@ -42,7 +42,7 @@ The story tries to make the same argument as the mechanics. Wade Wilson spent hi
 2. Landmark reveal: Tall landmarks break through the fog within a wide radius and are shown with their names, so the skyline takes the place of the compass.
 3. Letters as navigation: All goals are described in relation to landmarks, edges and districts and never with coordinates or markers.
 4. District feedback: When the player crosses into a new ward its name is shown once. This is Lynch's idea of legibility as a moment of arrival, and it is also the only text based orientation aid in the game.
-5. The sketchbook (M key): A blank page and some ink. Drawing is optional and never graded, it simply puts on paper the cognitive map that the player is already building in their head anyway.
+5. The sketchbook (M key): A blank page, some ink and a small set of map stamps like a tower, a church, a windmill, a bridge and a door. Drawing is optional and never graded, it simply puts on paper the cognitive map that the player is already building in their head anyway. The stamps do not break the rule of not showing a map, because they know nothing about the city. The player decides where each one goes, so the knowledge still has to come from walking, just like the symbols the player places by hand in *Etrian Odyssey* (Atlus 2007). They only make it easier to draw, since drawing with a mouse is slow.
 6. The reveal: After the fifth letter the game shows the surveyor's plan next to the player's sketch (Figure 7). The reward is this comparison and not a score.
 
 ![The gameplay loop](figures/fig-loop.svg)
